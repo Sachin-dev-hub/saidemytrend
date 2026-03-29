@@ -32,7 +32,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sachin-sonarqube-server') {
-                    sh 'mvn sonar:sonar'
+                    sh 'mvn clean verify sonar:sonar'
                 }
             }
         }
