@@ -30,14 +30,20 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sachin-sonarqube-server') {
-                    sh 'mvn clean verify sonar:sonar'
-                }
+    steps {
+        withSonarQubeEnv('sachin-sonarqube-server') {
+            withCredentials([string(credentialsId: 'sonar-cred', variable: 'SONAR_TOKEN')]) {
+                sh """
+                   mvn clean verify sonar:sonar \
+                     -Dsonar.projectKey=swati-key1_swati-project1 \
+                     -Dsonar.organization=swati-key1 \
+                     -Dsonar.host.url=https://sonarcloud.io \
+                     -Dsonar.login=$SONAR_TOKEN
+                """
             }
         }
-
     }
+}
 
     post {
         success {
