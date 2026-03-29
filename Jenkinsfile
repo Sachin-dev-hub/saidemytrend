@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'M2'   // must match Global Tool Configuration
+        maven 'M2_HOME'   // must match Global Tool Configuration
         jdk 'JAVA_HOME'      // must match Global Tool Configuration
     }
 
