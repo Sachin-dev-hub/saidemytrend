@@ -1,51 +1,9 @@
-pipeline {
-    agent any
-
-    tools {
-        maven 'M2_HOME'   // must match Global Tool Configuration
-        jdk 'JAVA_HOME'      // must match Global Tool Configuration
-    }
-
-    stages {
-
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/Sachin-dev-hub/my-irctc.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo '========== Build Started =========='
-                sh 'mvn clean package -DskipTests'
-                echo '========== Build Completed =========='
-            }
-        }
-
-        stage('Unit Test Report') {
-            steps {
-                echo '========== Test Report =========='
-                sh 'mvn surefire-report:report'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sachin-sonarqube-server') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
-
-    }
-
-    post {
-        success {
-            archiveArtifacts artifacts: 'target/*.war', fingerprint: true
-            echo '✅ Build & SonarQube analysis SUCCESS'
-        }
-        failure {
-            echo '❌ Build FAILED'
-        }
-    }
-}
+sonar.verbose=true
+sonar.projectKey=swati-key1
+sonar.projectName=swati-project1
+sonar.sourceEncoding=UTF-8
+sonar.sources=src
+sonar.java.binaries=target/classes
+sonar.host.url=https://sonarcloud.io
+sonar.login=fbaf4d73826e5f28f4763e38eb92aa4dc83a7a7a
+sonar.organization=swati-key1
