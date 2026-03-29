@@ -1,67 +1,51 @@
-// Define the URL of the Artifactory registry
-def registry = 'https://trialryshrf.jfrog.io/'
-
 pipeline {
     agent any
 
-    environment {
-        PATH = "/opt/maven/bin:$PATH"
+    tools {
+        maven 'Maven'   // must match Global Tool Configuration
+        jdk 'Java'      // must match Global Tool Configuration
     }
 
     stages {
 
-        stage("build") {
+        stage('Checkout Code') {
             steps {
-                echo "----------- build started ----------"
-                sh 'mvn clean deploy -Dmaven.test.skip=true'
-                echo "----------- build completed ----------"
+                git branch: 'main', url: 'https://github.com/Sachin-dev-hub/my-irctc.git'
             }
         }
 
-        stage("test") {
+        stage('Build') {
             steps {
-                echo "----------- unit test started ----------"
+                echo '========== Build Started =========='
+                sh 'mvn clean package -DskipTests'
+                echo '========== Build Completed =========='
+            }
+        }
+
+        stage('Unit Test Report') {
+            steps {
+                echo '========== Test Report =========='
                 sh 'mvn surefire-report:report'
-                echo "----------- unit test completed ----------"
             }
         }
 
-        stage('SonarQube analysis') {
-            environment {
-                scannerHome = tool 'sachin-sonar-scanner'
-            }
-
+        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sachin-sonarqube-server') {
-                    sh "${scannerHome}/bin/sonar-scanner"
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
 
-        stage("Jar Publish") {
-            steps {
-                script {
-                    echo '<--------------- Jar Publish Started --------------->'
-                    def server = Artifactory.newServer url: registry + "/artifactory", credentialsId: "artifact-cred"
-                    def properties = "buildid=${env.BUILD_ID},commitid=${GIT_COMMIT}"
-                    def uploadSpec = """{
-                          "files": [
-                            {
-                              "pattern": "jarstaging/(*)",
-                              "target": "sai-libs-release-local/{1}",
-                              "flat": "false",
-                              "props": "${properties}",
-                              "exclusions": [ "*.sha1", "*.md5"]
-                            }
-                         ]
-                     }"""
-                    def buildInfo = server.upload(uploadSpec)
-                    buildInfo.env.collect()
-                    server.publishBuildInfo(buildInfo)
-                    echo '<--------------- Jar Publish Ended --------------->'
-                }
-            }
-        }
+    }
 
+    post {
+        success {
+            archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+            echo '✅ Build & SonarQube analysis SUCCESS'
+        }
+        failure {
+            echo '❌ Build FAILED'
+        }
     }
 }
